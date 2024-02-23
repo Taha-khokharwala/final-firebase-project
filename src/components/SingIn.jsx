@@ -18,6 +18,7 @@ const SignIn = () => {
         const user = userCredential.user;
 
         if (user.emailVerified) {
+          alert("sign in Successfully")
           navigate('/Home-page');
         } else {
           alert('Email not verifie');

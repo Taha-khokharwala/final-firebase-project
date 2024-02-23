@@ -1,13 +1,16 @@
 import React, { Fragment ,  useState } from 'react';
 import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
-import { getStorage, ref, uploadBytes } from 'firebase/storage';
+import { getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
 import { app } from './firebase';
 import { Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { setUserData } from './redux/slice';
 
 const auth = getAuth(app);
 const storage = getStorage(app);
 
 const SignUp = () => {
+  const dispatch = useDispatch();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -25,14 +28,31 @@ const SignUp = () => {
       .then(() => {
         if (image) {
           const storageRef = ref(storage, `images/${image.name}`);
-          uploadBytes(storageRef, image).then(() => {
+          uploadBytes(storageRef, image)
+            .then(() => getDownloadURL(storageRef))
+            .then((downloadURL) => {
+              dispatch(
+                setUserData({
+                  name,
+                  age,
+                  phone,
+                  imageUrl: downloadURL,
+                })
+              );
               alert('Send a verification mail to your email');
               localStorage.setItem('Name', name);
+              localStorage.setItem('Age', age);
+              localStorage.setItem('Phone No.', phone);
               localStorage.setItem('Email', email);
               localStorage.setItem('Password', password);
-          });
+              localStorage.setItem('Image URL', downloadURL);
+
+            })
+            .catch((error) => {
+              console.error('Error getting download URL:', error);
+            });
         } else {
-          console.log("Error")
+          console.log('Error');
         }
       })
       .catch((error) => {
